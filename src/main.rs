@@ -8,29 +8,29 @@ use csv::ReaderBuilder;
 use serde::{Deserialize, Serialize};
 
 // TODO match up notes with frequencies and print as the scale is playing
-// TODO update Data struct to pull in frequency with note name
 // TODO decide whehter to use CSV or stick with middle C/A as the basis for plahing notes
+// Create CLI to add input of root note and scale type to command line
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Data {
-    Note: String,
-    Frequency: f64,
-    Wavelength: f64,
+struct Note {
+    note: String,
+    frequency: f32,
+    wavelength: f32,
 }
 
-fn parse_csv(path: &str) {
-    let mut result: Vec<Data> = Vec::new();
+fn parse_csv(path: &str) -> Vec<Note> {
+    let mut result: Vec<Note> = Vec::new();
     let file = File::open(path).expect("Unable to open file");
     let buf_reader = BufReader::new(file);
     let mut csv_reader = ReaderBuilder::new().has_headers(true).from_reader(buf_reader);
 
-    for result in csv_reader.deserialize() {
-        let data: Data = result.expect("Unable to parse");
-        //result.push(data);
-        println!("{:?}", data);
+    for row in csv_reader.deserialize() {
+        let data: Note = row.expect("Unable to parse");
+        result.push(data);
+        //println!("{:?}", data);
     }
 
-    // result
+    result
 }
 
 fn play_scale(sink: Sink, scale: Vec<f32>) {
@@ -44,15 +44,15 @@ fn play_scale(sink: Sink, scale: Vec<f32>) {
 fn build_scale(root: f32, scale_type: &str) -> Vec<f32> {
     //major scale: whole whole half whole whole half whole
     //minor scale: whole half whole whole half whole whole
-    const mult: f32 = 1.05946309436; //The 12th root of 12.
+    const MULT: f32 = 1.05946309436; //The 12th root of 2.
 
     let mut scale = if scale_type == "major" {
-        vec![1.0, mult.powf(2.0), mult.powf(4.0), mult.powf(5.0), mult.powf(7.0),
-        mult.powf(9.0), mult.powf(11.0), mult.powf(12.0)]
+        vec![1.0, MULT.powf(2.0), MULT.powf(4.0), MULT.powf(5.0), MULT.powf(7.0),
+        MULT.powf(9.0), MULT.powf(11.0), MULT.powf(12.0)]
     } 
     else if scale_type == "minor" {
-        vec![1.0, mult.powf(2.0), mult.powf(3.0), mult.powf(5.0), mult.powf(7.0),
-        mult.powf(8.0), mult.powf(10.0), mult.powf(12.0)]
+        vec![1.0, MULT.powf(2.0), MULT.powf(3.0), MULT.powf(5.0), MULT.powf(7.0),
+        MULT.powf(8.0), MULT.powf(10.0), MULT.powf(12.0)]
     }
     else {
         println!("Please select major or minor as your scale type.");
@@ -65,21 +65,14 @@ fn build_scale(root: f32, scale_type: &str) -> Vec<f32> {
     scale
 }
 
-
 fn main() {
-    let root: f32 = 440.0; //A4
-    let mult: f32 = 1.0595;
+    let note_input = "C5";
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
     let sink = Sink::try_new(&stream_handle).unwrap();
 
-    let c_maj: [f32; 8] = [523.25, 587.33, 659.25,698.46,783.99,880.0,987.77,1046.50];
-
-    
+    let notes = parse_csv("src/notes.csv");
+    let root_note: Vec<Note> = notes.into_iter().filter(|n| n.note == note_input).collect();
     //println!("{:?}", build_scale(vec));
-    let maj_scale = build_scale(root, "major");
-    let min_scale = build_scale(root, "minor");
-    let bad_scale = build_scale(root, "bad");
-    //println!("{:?}", scale_test);
+    let maj_scale = build_scale(root_note[0].frequency, "major");
     play_scale(sink, maj_scale);
-    //parse_csv("src/notes.csv");
 }
