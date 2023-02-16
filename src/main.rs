@@ -27,7 +27,6 @@ fn parse_csv(path: &str) -> Vec<Note> {
     for row in csv_reader.deserialize() {
         let data: Note = row.expect("Unable to parse");
         result.push(data);
-        //println!("{:?}", data);
     }
 
     result
@@ -41,16 +40,16 @@ fn play_scale(sink: Sink, scale: Vec<f32>) {
     }
 }
 
-fn build_scale(root: f32, scale_type: &str) -> Vec<f32> {
-    //major scale: whole whole half whole whole half whole
-    //minor scale: whole half whole whole half whole whole
+fn build_scale(root: &Note, scale_type: &str) -> Vec<f32> {
     const MULT: f32 = 1.05946309436; //The 12th root of 2.
 
     let mut scale = if scale_type == "major" {
+        //major scale: whole whole half whole whole half whole
         vec![1.0, MULT.powf(2.0), MULT.powf(4.0), MULT.powf(5.0), MULT.powf(7.0),
         MULT.powf(9.0), MULT.powf(11.0), MULT.powf(12.0)]
     } 
     else if scale_type == "minor" {
+        //minor scale: whole half whole whole half whole whole
         vec![1.0, MULT.powf(2.0), MULT.powf(3.0), MULT.powf(5.0), MULT.powf(7.0),
         MULT.powf(8.0), MULT.powf(10.0), MULT.powf(12.0)]
     }
@@ -60,19 +59,20 @@ fn build_scale(root: f32, scale_type: &str) -> Vec<f32> {
     };
 
     for i in scale.iter_mut() {
-        *i *= root;
+        *i *= root.frequency;
      }
     scale
 }
 
 fn main() {
-    let note_input = "C5";
+    let note_input = "B3";
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
     let sink = Sink::try_new(&stream_handle).unwrap();
 
     let notes = parse_csv("src/notes.csv");
-    let root_note: Vec<Note> = notes.into_iter().filter(|n| n.note == note_input).collect();
+    let root_note: Vec<Note> = notes.into_iter()
+        .filter(|n| n.note == note_input).collect();
     //println!("{:?}", build_scale(vec));
-    let maj_scale = build_scale(root_note[0].frequency, "major");
+    let maj_scale = build_scale(&root_note[0], "minor");
     play_scale(sink, maj_scale);
 }
