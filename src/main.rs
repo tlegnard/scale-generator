@@ -7,9 +7,9 @@ use std::io::{BufReader};
 use csv::ReaderBuilder;
 use serde::{Deserialize, Serialize};
 
-// TODO match up notes with frequencies and print as the scale is playing
+use clap::{Arg, App};
+
 // TODO decide whehter to use CSV or stick with middle C/A as the basis for plahing notes
-// Create CLI to add input of root note and scale type to command line
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct Note {
@@ -73,9 +73,31 @@ fn play_scale(sink: Sink, scale: Vec<f32>) {
     }
 }
 
+
 fn main() {
-    let note_input = "A4";
-    let scale_type = "minor";
+    let args: Vec<String> = std::env::args().collect();
+    let matches = App::new("scale-generator")
+        .arg(Arg::with_name("note")
+            .short('n')
+            .long("note")
+            .value_name("NOTE")
+            .takes_value(true)
+            .help("The root note of the scale"))
+        .arg(Arg::with_name("scale-type")
+            .short('s')
+            .long("scale-type")
+            .takes_value(true)
+            .possible_values(&["major", "minor"])
+            .help("Major or Minor."))
+        .get_matches_from(args);
+
+    
+
+    let note_input: &str = matches.value_of("note").unwrap_or("C5");
+    let scale_type: &str = matches.value_of("scale-type").unwrap_or("major");
+    
+    // let note_input = "A4";
+    // let scale_type = "minor";
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
     let sink = Sink::try_new(&stream_handle).unwrap();
 
@@ -90,7 +112,7 @@ fn main() {
         Some(index) =>
         if scale_type == "minor" {
             println!(
-                "root note is {} {} {} {} {} {} {} {}",
+                "{} {} {} {} {} {} {} {}",
                 notes[index].note,
                 notes[index+2].note,
                 notes[index+3].note,
@@ -103,7 +125,7 @@ fn main() {
         }
         else if scale_type == "major" {
             println!(
-                "root note is {} {} {} {} {} {} {} {}",
+                "{} {} {} {} {} {} {} {}",
                 notes[index].note,
                 notes[index+2].note,
                 notes[index+4].note,
