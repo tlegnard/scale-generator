@@ -91,13 +91,9 @@ fn main() {
             .help("Major or Minor."))
         .get_matches_from(args);
 
-    
-
     let note_input: &str = matches.value_of("note").unwrap_or("C5");
     let scale_type: &str = matches.value_of("scale-type").unwrap_or("major");
     
-    // let note_input = "A4";
-    // let scale_type = "minor";
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
     let sink = Sink::try_new(&stream_handle).unwrap();
 
