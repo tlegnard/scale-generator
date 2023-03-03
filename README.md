@@ -8,5 +8,5 @@ cargo run -- --note A4 --scale-type minor
 ```
 
 ```
-./target/scale-generator --note A#5/Bb5 --scale-type major
+./target/scale-generator --note A#/Bb --scale-type major
 ```
