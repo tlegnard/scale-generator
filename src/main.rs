@@ -105,39 +105,24 @@ fn main() {
     let match_notes = match_root(&notes, &note_input);
 
     match match_notes {
-        Some(index) =>
-        if scale_type == "minor" {
-            println!(
-                "{} {} {} {} {} {} {} {}",
-                notes[index].note,
-                notes[index+2].note,
-                notes[index+3].note,
-                notes[index+5].note,
-                notes[index+7].note,
-                notes[index+8].note,
-                notes[index+10].note,
-                notes[index+12].note,
-            )
-        }
-        else if scale_type == "major" {
-            println!(
-                "{} {} {} {} {} {} {} {}",
-                notes[index].note,
-                notes[index+2].note,
-                notes[index+4].note,
-                notes[index+5].note,
-                notes[index+7].note,
-                notes[index+9].note,
-                notes[index+11].note,
-                notes[index+12].note,
-            )
-        }
-        else {
-            ()
-         }
+        Some(index) => {
+            let scale_indices: Vec<usize> = if scale_type == "minor" {
+                vec![0, 2, 3, 5, 7, 8, 10, 12]
+            } else if scale_type == "major" {
+                vec![0, 2, 4, 5, 7, 9, 11, 12]
+            } else {
+                Vec::new()
+            };
 
-        ,
-        None => println!("Note not found.")
+            let scale_notes: Vec<String> = scale_indices
+                .iter()
+                .map(|&i| notes[index + i].note.clone())
+                .collect();
+
+            let scale_notes_str = scale_notes.join(" ");
+            println!("{}", scale_notes_str);
+        }
+        None => println!("Note not found."),
     }
 
     play_scale(sink, scale);
